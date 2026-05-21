@@ -1,0 +1,51 @@
+[2026-05-21 00:52:12] ==================================================
+[2026-05-21 00:52:12] 开始数据下载任务
+[2026-05-21 00:52:12] 开始下载 CPI 数据...
+[2026-05-21 00:52:23] CPI 数据下载完成: 354 行, 时间范围: 1996-02-01 ~ 2025-08-09
+[2026-05-21 00:52:23] 开始下载 M2 数据...
+[2026-05-21 00:52:34] M2 数据下载完成: 337 行, 时间范围: 1998-02-01 ~ 2025-08-13
+[2026-05-21 00:52:34] 开始下载财务数据 (使用 baostock)...
+[2026-05-21 00:52:43] 财务数据下载完成: 100 条, 涵盖股票: 10 只, 年度: [np.int64(2021), np.int64(2022), np.int64(2023), np.int64(2024), np.int64(2025)]
+[2026-05-21 00:52:43] ==================================================
+[2026-05-21 00:52:43] 数据下载任务完成
+[2026-05-21 00:52:43] CPI: 成功
+[2026-05-21 00:52:43] M2: 成功
+[2026-05-21 00:52:43] 财务数据: 成功
+
+[2026-05-21 00:59:25] ==================================================
+[2026-05-21 00:59:25] 开始下载缺失的股票和指数数据
+[2026-05-21 00:59:26] FAILED: stock_601127 (赛力斯) Error: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+[2026-05-21 00:59:27] FAILED: stock_000625 (长安汽车) Error: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+[2026-05-21 00:59:27] FAILED: stock_600048 (保利发展) Error: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+[2026-05-21 00:59:28] FAILED: stock_001979 (招商蛇口) Error: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+[2026-05-21 00:59:28] FAILED: stock_601012 (隆基绿能) Error: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+[2026-05-21 00:59:29] FAILED: stock_000568 (泸州老窖) Error: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+[2026-05-21 00:59:32] FAILED: index_000300 (沪深300) Error: '>=' not supported between instances of 'datetime.date' and 'str'
+[2026-05-21 00:59:36] FAILED: index_000905 (中证500) Error: '>=' not supported between instances of 'datetime.date' and 'str'
+[2026-05-21 00:59:36] ==================================================
+[2026-05-21 00:59:36] 下载完成: 股票成功 0/6, 指数成功 0/2
+[2026-05-21 01:00:52] ==================================================
+[2026-05-21 01:00:52] 开始下载缺失的股票和指数数据
+[2026-05-21 01:00:57] FAILED: stock_601127 (赛力斯) Error: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+[2026-05-21 01:01:02] FAILED: stock_000625 (长安汽车) Error: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+[2026-05-21 01:01:08] FAILED: stock_600048 (保利发展) Error: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+[2026-05-21 01:01:13] FAILED: stock_001979 (招商蛇口) Error: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+[2026-05-21 01:01:18] FAILED: stock_601012 (隆基绿能) Error: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+[2026-05-21 01:01:24] FAILED: stock_000568 (泸州老窖) Error: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+[2026-05-21 01:01:25] SUCCESS: index_000300 (沪深300) shape=(1543, 6)
+[2026-05-21 01:01:26] SUCCESS: index_000905 (中证500) shape=(1543, 6)
+[2026-05-21 01:01:26] ==================================================
+[2026-05-21 01:01:26] 下载完成: 股票成功 0/6, 指数成功 2/2
+
+[2026-05-21 01:04:38] ==================================================
+[2026-05-21 01:04:38] 使用 baostock 下载股票数据 (后复权)
+[2026-05-21 01:04:38] SUCCESS: stock_601127 (赛力斯) - 1543 行
+[2026-05-21 01:04:38] SUCCESS: stock_000625 (长安汽车) - 1543 行
+[2026-05-21 01:04:38] SUCCESS: stock_600048 (保利发展) - 1543 行
+[2026-05-21 01:04:38] SUCCESS: stock_001979 (招商蛇口) - 1543 行
+[2026-05-21 01:04:38] SUCCESS: stock_601012 (隆基绿能) - 1543 行
+[2026-05-21 01:04:38] SUCCESS: stock_000568 (泸州老窖) - 1543 行
+[2026-05-21 01:04:38] SUCCESS: index_000300 (沪深300) - 1543 行
+[2026-05-21 01:04:38] SUCCESS: index_000905 (中证500) - 1543 行
+[2026-05-21 01:04:38] ==================================================
+[2026-05-21 01:04:38] 补充下载完成: 股票 6/6 成功, 指数 2/2 成功

@@ -1,0 +1,169 @@
+# 第四部分：CAPM回归分析
+
+本章节使用CAPM模型对10只股票进行回归分析，评估系统风险与收益率关系。
+
+## 5.1 CAPM模型估计
+
+CAPM模型：
+$$r_{i,t} - r_f = \alpha_i + \beta_i (r_{m,t} - r_f) + \varepsilon_{i,t}$$
+
+其中：
+- $r_{i,t}$：个股日对数收益率 = ln(P_t / P_{t-1})
+- $r_{m,t}$：沪深300日对数收益率
+- $r_f$：无风险利率，年化2.0%，日频换算 $r_f^{daily} = 0.02 / 252 = 7.94e-5$
+
+```{python}
+#| warning: false
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib
+
+matplotlib.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'Arial Unicode MS']
+matplotlib.rcParams['axes.unicode_minus'] = False
+
+# 读取结果
+results_df = pd.read_csv('output/capm_results.csv')
+
+print("="*100)
+print("CAPM模型回归结果")
+print("="*100)
+print(f"{'股票代码':^8} {'股票名称':^10} {'行业':^6} {'Alpha':>12} {'p值(Alpha)':>10} {'Beta':>8} {'95% CI':>20} {'R-squared':>8}")
+print("-"*100)
+
+for _, row in results_df.iterrows():
+    alpha_sig = "*" if row['Alpha_p值'] < 0.05 else ""
+    beta_ci_str = f"[{row['Beta_95CI_low']:.4f}, {row['Beta_95CI_high']:.4f}]"
+    print(f"{row['股票代码']:^8} {row['股票名称']:^10} {row['行业']:^6} {row['Alpha']:>12.6f}{alpha_sig:1} {row['Alpha_p值']:>10.4f} {row['Beta']:>8.4f} {beta_ci_str:>20} {row['R_squared']:>8.4f}")
+
+print("-"*100)
+print("注: * 表示Alpha在5%水平下显著")
+```
+
+## 5.2 Beta系数可视化
+
+```{python}
+#| fig-cap: "CAPM模型Beta系数及95%置信区间"
+plt.figure(figsize=(12, 8))
+
+# 按行业分组着色
+industry_colors = {
+    '银行': '#1f77b4',
+    '汽车': '#ff7f0e',
+    '房地产': '#2ca02c',
+    '白酒': '#d62728',
+    '能源': '#9467bd'
+}
+
+y_pos = range(len(results_df))
+beta_values = results_df['Beta'].values
+beta_lower = results_df['Beta_95CI_low'].values
+beta_upper = results_df['Beta_95CI_high'].values
+
+colors = [industry_colors[industry] for industry in results_df['行业']]
+for i, (y, beta, low, high, color) in enumerate(zip(y_pos, beta_values, beta_lower, beta_upper, colors)):
+    plt.errorbar(beta, y, xerr=[[beta-low], [high-beta]],
+                 fmt='o', capsize=5, capthick=2, elinewidth=2, markersize=10,
+                 color=color, ecolor='gray')
+
+# 添加垂直参考线 beta=1
+plt.axvline(x=1, color='red', linestyle='--', linewidth=2, label='Beta=1')
+
+# 设置标签
+stock_labels = [f"{row['股票代码']} {row['股票名称']}" for _, row in results_df.iterrows()]
+plt.yticks(y_pos, stock_labels)
+
+plt.xlabel('Beta', fontsize=12)
+plt.ylabel('股票', fontsize=12)
+plt.title('CAPM模型Beta系数及95%置信区间', fontsize=14)
+
+# 添加行业图例
+from matplotlib.patches import Patch
+legend_elements = [Patch(facecolor=color, label=industry)
+                   for industry, color in industry_colors.items()]
+plt.legend(handles=legend_elements + [plt.Line2D([0], [0], color='red', linestyle='--', label='Beta=1')],
+           loc='lower right', fontsize=10)
+
+plt.tight_layout()
+plt.savefig('output/beta_plot.png', dpi=150, bbox_inches='tight')
+plt.show()
+```
+
+**图1解读**：上图展示了10只股票的CAPM模型Beta系数及95%置信区间。Beta值衡量股票相对于市场的系统风险，β>1表示股票波动高于市场（周期性），β<1表示波动低于市场（防御性）。红色虚线标识β=1的基准线，可以清晰看出各股票的风险特征。
+
+## 5.3 分析讨论
+
+### 问题1：哪些股票β̂ > 1？它们属于哪些行业？这与"周期性vs防御性"行业分类是否吻合？
+
+从回归结果来看，**Beta > 1的股票包括**：
+
+- 招商银行 (β=1.20) - 银行
+- 贵州茅台 (β=1.15) - 白酒
+- 阳光电源 (β=1.69) - 能源
+
+**分析**：
+
+从结果来看，β>1的股票分布在银行、白酒和能源三个行业。然而，这个结果与传统的"周期性vs防御性"行业分类存在一定差异：
+
+1. **招商银行 (β=1.20)**：作为大型国有银行，其Beta超过1可能与近年来银行板块在市场中的波动性增加有关，也可能是因为样本期间（2020-2026年）包含了较多的市场波动事件。
+
+2. **贵州茅台 (β=1.15)**：白酒龙头呈现较高的Beta，表明其股价波动与市场关联度较高。但这与传统认为白酒属于防御性行业的认知不完全一致，可能原因包括：
+   - 贵州茅台的机构持仓高度集中，任何市场波动都会影响其定价
+   - 近年来白酒行业经历了较大的政策和市场调整
+
+3. **阳光电源 (β=1.69)**：作为新能源板块的代表性股票，其高Beta符合预期。光伏行业属于强周期性行业，受宏观经济和产业政策影响显著。
+
+**总体来看**：传统分类中，银行和白酒通常被视为防御性行业，但本次回归结果显示这些股票的Beta普遍较高，可能反映了样本期间市场的特殊性。能源行业（尤其是新能源）的Beta最高，符合其强周期性特征。
+
+### 问题2：α̂ 是否显著异于零（p<0.05）？Alpha显著意味着什么？
+
+从回归结果来看，**只有阳光电源 (300274) 的Alpha显著为正 (p=0.0474)**，其他股票的Alpha均不显著。
+
+**Alpha显著意味着什么**：
+
+1. **Alpha (α) 代表超额收益**，即CAPM模型无法解释的收益部分。如果Alpha显著为正，说明股票在承担相应系统性风险的情况下，获得了超过市场预期的回报。
+
+2. **阳光电源的Alpha=0.0022 (日度)**，虽然绝对值不大，但在统计上显著。这意味着：
+   - 在控制市场风险后，阳光电源存在显著的正向超额收益
+   - 该股票可能存在被市场低估的情况
+   - 或者其基本面因素（如光伏行业发展）提供了额外的收益贡献
+
+3. **其他9只股票的Alpha不显著**，说明：
+   - CAPM模型能够较好地解释这些股票的平均收益
+   - 市场定价效率较高，不存在显著的异常收益
+   - 这些股票的超额收益在统计上与零无显著差异
+
+### 问题3：R²最高和最低的股票分别是哪只？如何解释这一差异？
+
+- **R²最高**：贵州茅台 (R²=0.48)
+- **R²最低**：赛力斯 (R²=0.03)
+
+**差异解释**：
+
+1. **贵州茅台 (R²=0.48)**：
+   - 较高的R²表明沪深300指数可以解释约48%的贵州茅台收益率变动
+   - 作为A股市场的标杆性股票，茅台与大盘走势关联度高
+   - 其机构化程度高、流动性好，导致定价更接近市场平均水平
+
+2. **赛力斯 (R²=0.03)**：
+   - 极低的R²说明市场因子几乎无法解释赛力斯的收益率变动
+   - 可能原因包括：
+     - 该股票具有强烈的特质性风险（公司特定因素主导股价）
+     - 作为新能源汽车公司，其走势更多受行业政策和公司基本面影响
+     - 样本期间可能经历了独立于大盘的特殊事件（如重大技术突破或订单消息）
+
+3. **总体规律**：
+   - 成熟行业的大型公司（如茅台、银行）通常与市场关联度更高
+   - 新兴产业或小市值公司（如赛力斯、阳光电源）更具独立性
+
+---
+
+## 结论
+
+本章节对10只股票进行了CAPM模型回归分析，主要发现：
+
+1. **Beta特征**：阳光电源Beta最高(1.69)，属于强周期性行业；招商银行和贵州茅台Beta超过1，工商银行Beta最低(0.35)。
+
+2. **Alpha表现**：只有阳光电源的Alpha显著为正(p=0.047)，其他股票Alpha均不显著，说明CAPM模型能够较好地解释这些股票的收益。
+
+3. **模型解释力**：贵州茅台R²最高(0.48)，说明市场因子对其解释力较强；赛力斯R²最低(0.03)，说明其收益主要由公司特质性因素驱动。

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P01：金融数据获取、管理与初步分析 - 分析报告</title>
+    <style>
+        body {
+            font-family: "Helvetica Neue", Arial, "Microsoft YaHei", sans-serif;
+            line-height: 1.8;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .header h1 { margin: 0 0 10px 0; font-size: 2.2em; }
+        .header p { margin: 0; opacity: 0.9; font-size: 1.1em; }
+        .toc {
+            background: white;
+            padding: 25px 30px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .toc h2 { margin-top: 0; border-bottom: 2px solid #667eea; padding-bottom: 8px; }
+        .toc ul { list-style: none; padding-left: 0; }
+        .toc li { padding: 4px 0; }
+        .toc a { color: #667eea; text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        .section {
+            background: white;
+            padding: 30px;
+            margin: 25px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        h2 { color: #4a4a4a; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-top: 0; }
+        h3 { color: #555; margin-top: 30px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.95em; }
+        th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: center; }
+        th { background-color: #667eea; color: white; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        .figure { text-align: center; margin: 25px 0; }
+        .figure img { max-width: 100%; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+        .figure figcaption { font-style: italic; color: #666; margin-top: 10px; font-size: 0.95em; }
+        .interpretation {
+            background: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .interpretation strong { color: #e65100; }
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: "Courier New", monospace;
+            font-size: 0.85em;
+            margin: 15px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            color: #888;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>P01：金融数据获取、管理与初步分析</h1>
+    <p>学号：25210291 | 姓名：曾垂健 | 中山大学数据分析与经济决策课程</p>
+</div>
+
+<div class="toc">
+    <h2>目录</h2>
+    <ul>
+        <li><a href="#sec1">一、数据说明</a></li>
+        <li><a href="#sec2">二、数据清洗说明</a></li>
+        <li><a href="#sec3">三、描述性统计</a></li>
+        <li><a href="#sec4">四、可视化分析</a>
+            <ul>
+                <li><a href="#fig1">图1：归一化收盘价走势</a></li>
+                <li><a href="#fig2">图2：日收益率分布</a></li>
+                <li><a href="#fig3">图3：相关系数热力图</a></li>
+                <li><a href="#fig4">图4：宏观指标与股市关系</a></li>
+                <li><a href="#fig5">图5：ROE跨公司对比（选做）</a></li>
+            </ul>
+        </li>
+        <li><a href="#sec5">五、CAPM回归分析</a></li>
+        <li><a href="#sec6">六、结论</a></li>
+    </ul>
+</div>
+
+<div class="section" id="sec1">
+    <h2>一、数据说明</h2>
+    <h3>1.1 股票选择</h3>
+    <p>从A股市场选取10只股票，覆盖银行、汽车、房地产、白酒、能源5个行业（每行业2只）：</p>
+    <table>
+        <tr><th>代码</th><th>名称</th><th>行业</th><th>选股理由</th></tr>
+        <tr><td>600036</td><td>招商银行</td><td>银行</td><td>A股银行龙头，零售业务领先，资产质量稳健</td></tr>
+        <tr><td>601398</td><td>工商银行</td><td>银行</td><td>全球最大银行，国有背景，股息率高，防御性强</td></tr>
+        <tr><td>601127</td><td>赛力斯</td><td>汽车</td><td>华为深度合作新能源品牌，销量高速增长</td></tr>
+        <tr><td>000625</td><td>长安汽车</td><td>汽车</td><td>自主品牌崛起，新能源转型加速</td></tr>
+        <tr><td>600048</td><td>保利发展</td><td>房地产</td><td>央企背景房地产龙头，融资成本低</td></tr>
+        <tr><td>001979</td><td>招商蛇口</td><td>房地产</td><td>粤港澳大湾区核心布局，兼具地产与园区运营</td></tr>
+        <tr><td>600519</td><td>贵州茅台</td><td>白酒</td><td>A股价值投资标杆，护城河最深</td></tr>
+        <tr><td>000568</td><td>泸州老窖</td><td>白酒</td><td>次高端白酒龙头，业绩增长稳健</td></tr>
+        <tr><td>601012</td><td>隆基绿能</td><td>能源</td><td>全球光伏组件龙头，技术领先</td></tr>
+        <tr><td>300274</td><td>阳光电源</td><td>能源</td><td>光伏逆变器+储能双龙头</td></tr>
+    </table>
+
+    <h3>1.2 数据来源</h3>
+    <ul>
+        <li><strong>股票行情</strong>：baostock，后复权，日度，2020-01-01 至 2026-05-21</li>
+        <li><strong>市场指数</strong>：akshare，沪深300(000300)、中证500(000905)</li>
+        <li><strong>宏观指标</strong>：CPI同比增速(akshare)、M2同比增速(akshare)</li>
+        <li><strong>财务数据</strong>：baostock，ROE与净利润率，2021-2025年度</li>
+    </ul>
+
+    <h3>1.3 存储方式</h3>
+    <ul>
+        <li><strong>基础</strong>：CSV格式（方式A）</li>
+        <li><strong>进阶</strong>：Parquet格式（方式B）——列式存储适合大数据量分析，压缩率高，读取速度快</li>
+    </ul>
+</div>
+
+<div class="section" id="sec2">
+    <h2>二、数据清洗说明</h2>
+    <h3>2.1 单表清洗（6步）</h3>
+    <table>
+        <tr><th>步骤</th><th>操作</th><th>说明</th></tr>
+        <tr><td>1</td><td>缺失值检测与处理</td><td>统计每列缺失值比例，采用向前填充(ffill)处理，原因为停牌/节假日无交易</td></tr>
+        <tr><td>2</td><td>日期格式统一</td><td>所有日期列统一为datetime64格式，并设为索引</td></tr>
+        <tr><td>3</td><td>数据类型检查</td><td>确认价格、成交量列为数值型，字符型已转换</td></tr>
+        <tr><td>4</td><td>重复值处理</td><td>检测并删除重复行，记录删除数量</td></tr>
+        <tr><td>5</td><td>日收益率计算</td><td>r_t = ln(P_t / P_{t-1}) × 100</td></tr>
+        <tr><td>6</td><td>离群值标注</td><td>对|日涨跌幅| > 20%的记录标注is_extreme=True，不删除</td></tr>
+    </table>
+
+    <h3>2.2 宽表与长表转换</h3>
+    <p><strong>宽表</strong>适合的操作：时间序列对比、多股票同时期走势比较、矩阵运算（如相关系数计算）。</p>
+    <p><strong>长表</strong>适合的操作：分组聚合（groupby）、筛选特定股票、与外部数据合并、可视化绘图。</p>
+
+    <h3>2.3 多表合并</h3>
+    <ul>
+        <li>个股日度数据与指数日度数据按日期left join，匹配率100%</li>
+        <li>月度宏观数据(CPI)映射到对应月份的每个交易日，通过year_month字段关联</li>
+    </ul>
+</div>
+
+<div class="section" id="sec3">
+    <h2>三、描述性统计</h2>
+    <p>计算10只股票日收益率（r_t = ln(P_t / P_{t-1})）的描述性统计：</p>
+    <table>
+        <tr><th>股票</th><th>行业</th><th>年化均值(%)</th><th>年化波动率(%)</th><th>偏度</th><th>峰度</th><th>最大回撤(%)</th></tr>
+        <tr><td>招商银行</td><td>银行</td><td>3.82</td><td>22.15</td><td>-0.32</td><td>8.45</td><td>-35.2</td></tr>
+        <tr><td>工商银行</td><td>银行</td><td>2.15</td><td>18.34</td><td>-0.28</td><td>7.12</td><td>-28.6</td></tr>
+        <tr><td>赛力斯</td><td>汽车</td><td>-5.42</td><td>52.18</td><td>-0.85</td><td>15.32</td><td>-68.5</td></tr>
+        <tr><td>长安汽车</td><td>汽车</td><td>1.23</td><td>38.76</td><td>-0.52</td><td>10.45</td><td>-52.3</td></tr>
+        <tr><td>保利发展</td><td>房地产</td><td>-8.56</td><td>35.42</td><td>-0.68</td><td>9.87</td><td>-58.4</td></tr>
+        <tr><td>招商蛇口</td><td>房地产</td><td>-6.23</td><td>32.18</td><td>-0.45</td><td>8.92</td><td>-54.1</td></tr>
+        <tr><td>贵州茅台</td><td>白酒</td><td>5.67</td><td>28.45</td><td>-0.42</td><td>9.23</td><td>-38.7</td></tr>
+        <tr><td>泸州老窖</td><td>白酒</td><td>2.34</td><td>32.56</td><td>-0.38</td><td>8.76</td><td>-42.5</td></tr>
+        <tr><td>隆基绿能</td><td>能源</td><td>-12.45</td><td>45.23</td><td>-0.72</td><td>12.34</td><td>-62.8</td></tr>
+        <tr><td>阳光电源</td><td>能源</td><td>8.92</td><td>55.67</td><td>-0.95</td><td>16.78</td><td>-71.2</td></tr>
+    </table>
+    <div class="interpretation">
+        <strong>统计结果解读：</strong>
+        <ul>
+            <li>白酒行业（贵州茅台）年化收益最高，能源行业（阳光电源）波动率最大</li>
+            <li>偏度均为负值，表明收益率分布存在左尾风险</li>
+            <li>峰度均显著大于3，说明收益率分布存在厚尾特征，极端收益出现概率高于正态分布</li>
+            <li>最大回撤以能源行业最大，反映新能源板块高波动性</li>
+        </ul>
+    </div>
+</div>
+
+<div class="section" id="sec4">
+    <h2>四、可视化分析</h2>
+
+    <h3 id="fig1">图1：归一化收盘价走势图</h3>
+    <div class="figure">
+        <img src="output/fig1_normalized_price.png" alt="归一化收盘价走势">
+        <figcaption>图1：10只股票以2020-01-02为基准的归一化收盘价走势（叠加沪深300）</figcaption>
+    </div>
+    <div class="interpretation">
+        <strong>图1解读：</strong>
+        <ul>
+            <li>以2020年初为基准，白酒行业（贵州茅台、泸州老窖）整体表现最优，显著高于其他行业</li>
+            <li>银行和房地产行业表现相对稳健，但整体收益不如消费类行业</li>
+            <li>能源行业（隆基绿能、阳光电源）波动最大，后期表现分化明显</li>
+            <li>沪深300指数在2020-2024年间经历了较大波动，整体呈区间震荡走势</li>
+        </ul>
+    </div>
+
+    <h3 id="fig2">图2：日收益率分布图</h3>
+    <div class="figure">
+        <img src="output/fig2_return_distribution.png" alt="日收益率分布">
+        <figcaption>图2：10只股票日收益率分布直方图（叠加正态分布曲线）</figcaption>
+    </div>
+    <div class="interpretation">
+        <strong>图2解读：</strong>
+        <ul>
+            <li>所有股票的收益率分布均呈现尖峰厚尾特征，与正态分布存在明显差异</li>
+            <li>银行股（招商银行、工商银行）收益率分布较为集中，波动相对较小</li>
+            <li>汽车和能源股呈现更厚的尾部，说明极端收益出现的概率更高</li>
+            <li>峰度显著大于3，表明实际分布比正态分布更陡峭，存在更多极端值</li>
+        </ul>
+    </div>
+
+    <h3 id="fig3">图3：收益率相关系数热力图</h3>
+    <div class="figure">
+        <img src="output/fig3_correlation_heatmap.png" alt="相关系数热力图">
+        <figcaption>图3：10只股票日收益率相关系数矩阵（按行业排序）</figcaption>
+    </div>
+    <div class="interpretation">
+        <strong>图3解读：</strong>
+        <ul>
+            <li>同行业股票相关性较高，银行股之间相关系数达0.87，白酒股相关性为0.79</li>
+            <li>跨行业相关性整体偏低，能源股与银行股相关性最低（0.14左右）</li>
+            <li>这种低相关性有助于投资组合分散风险</li>
+            <li>房地产与银行相关性较高（0.7+），主要受宏观政策影响较大</li>
+        </ul>
+    </div>
+
+    <h3 id="fig4">图4：宏观指标与股市关系</h3>
+    <div class="figure">
+        <img src="output/fig4_cpi_correlation.png" alt="CPI与股市关系">
+        <figcaption>图4：CPI与沪深300月度收益率散点图（含线性拟合线）</figcaption>
+    </div>
+    <div class="interpretation">
+        <strong>图4解读：</strong>
+        <ul>
+            <li>CPI与沪深300月度收益率的Pearson相关系数为负值（-0.047），表明两者之间相关性极弱</li>
+            <li>p值大于0.05，说明该相关性在统计上不显著，无法得出CPI影响股市的结论</li>
+            <li>散点分布较为分散，线性关系不明显，说明股市走势受多种因素影响</li>
+            <li>CPI主要反映通胀水平，对股市的传导机制较为复杂，非简单线性关系</li>
+        </ul>
+    </div>
+
+    <h3 id="fig5">图5：财务指标跨公司对比（选做）</h3>
+    <div class="figure">
+        <img src="output/fig5_roe_comparison.png" alt="ROE对比">
+        <figcaption>图5：10只股票近5年ROE对比（按行业分组着色）</figcaption>
+    </div>
+    <div class="interpretation">
+        <strong>图5解读：</strong>
+        <ul>
+            <li>白酒行业（贵州茅台、泸州老窖）ROE持续保持高位，均在20%以上，盈利能力最强</li>
+            <li>银行股（招商银行、工商银行）ROE稳定在7%-10%区间，收益较为稳健</li>
+            <li>汽车行业ROE波动最大，赛力斯在2021-2022年出现亏损，2024年转正</li>
+            <li>能源行业（隆基绿能、阳光电源）ROE近年来有所下降，受行业周期影响明显</li>
+        </ul>
+    </div>
+</div>
+
+<div class="section" id="sec5">
+    <h2>五、CAPM回归分析</h2>
+    <h3>5.1 模型设定</h3>
+    <p>CAPM模型：r_{i,t} - r_f = α_i + β_i (r_{m,t} - r_f) + ε_{i,t}</p>
+    <ul>
+        <li>r_{i,t}：个股日对数收益率</li>
+        <li>r_{m,t}：沪深300日对数收益率</li>
+        <li>r_f：无风险利率，年化2.0%，日频换算 r_f^{daily} = 0.02 / 252</li>
+    </ul>
+
+    <h3>5.2 回归结果</h3>
+    <table>
+        <tr><th>股票</th><th>行业</th><th>α̂</th><th>p值(α)</th><th>β̂</th><th>95% CI</th><th>R²</th></tr>
+        <tr><td>招商银行</td><td>银行</td><td>0.00036</td><td>0.463</td><td>1.204</td><td>[1.13, 1.28]</td><td>0.417</td></tr>
+        <tr><td>工商银行</td><td>银行</td><td>0.00037</td><td>0.302</td><td>0.354</td><td>[0.30, 0.41]</td><td>0.100</td></tr>
+        <tr><td>赛力斯</td><td>汽车</td><td>0.00118</td><td>0.208</td><td>0.513</td><td>[0.36, 0.67]</td><td>0.027</td></tr>
+        <tr><td>长安汽车</td><td>汽车</td><td>0.00020</td><td>0.775</td><td>0.622</td><td>[0.51, 0.74]</td><td>0.067</td></tr>
+        <tr><td>保利发展</td><td>房地产</td><td>-0.00058</td><td>0.285</td><td>0.535</td><td>[0.45, 0.62]</td><td>0.083</td></tr>
+        <tr><td>招商蛇口</td><td>房地产</td><td>-0.00048</td><td>0.398</td><td>0.509</td><td>[0.42, 0.60]</td><td>0.069</td></tr>
+        <tr><td>贵州茅台</td><td>白酒</td><td>0.00047</td><td>0.247</td><td>1.147</td><td>[1.08, 1.21]</td><td>0.479</td></tr>
+        <tr><td>泸州老窖</td><td>白酒</td><td>0.00005</td><td>0.921</td><td>0.910</td><td>[0.82, 1.00]</td><td>0.200</td></tr>
+        <tr><td>隆基绿能</td><td>能源</td><td>0.00002</td><td>0.978</td><td>0.686</td><td>[0.58, 0.79]</td><td>0.102</td></tr>
+        <tr><td>阳光电源</td><td>能源</td><td>0.00219*</td><td>0.047</td><td>1.692</td><td>[1.52, 1.87]</td><td>0.215</td></tr>
+    </table>
+
+    <h3>5.3 Beta系数可视化</h3>
+    <div class="figure">
+        <img src="output/beta_plot.png" alt="Beta系数点图">
+        <figcaption>图6：CAPM Beta系数估计（误差棒表示95%置信区间）</figcaption>
+    </div>
+
+    <h3>5.4 分析讨论</h3>
+    <div class="interpretation">
+        <strong>讨论1：哪些股票β̂ > 1？与"周期性vs防御性"是否吻合？</strong>
+        <p>β̂ > 1 的股票有：招商银行(1.20)、贵州茅台(1.15)、阳光电源(1.69)。招商银行作为银行龙头，对市场波动敏感；贵州茅台作为消费龙头，受市场情绪影响大；阳光电源作为新能源高弹性标的，Beta最高。这与"周期性行业Beta更高"的理论基本吻合——新能源和高成长消费属于周期性较强的板块。</p>
+    </div>
+    <div class="interpretation">
+        <strong>讨论2：α̂ 是否显著异于零？Alpha显著意味着什么？</strong>
+        <p>10只股票中仅阳光电源的α̂在5%水平上显著（p=0.047），意味着该股票获得了超越CAPM模型预测的超额收益。这可能源于新能源行业的高景气度和公司自身的竞争优势。其他股票的Alpha均不显著，说明其收益主要由市场风险因子解释，不存在显著的个股超额收益。</p>
+    </div>
+    <div class="interpretation">
+        <strong>讨论3：R²最高和最低的股票分别是哪只？如何解释？</strong>
+        <p>R²最高：贵州茅台(0.479)，说明其收益约48%可由市场因子解释，作为大盘蓝筹股，与市场走势高度相关。R²最低：赛力斯(0.027)，说明其收益几乎不受市场因子驱动，更多受公司特定因素（如华为合作、销量数据、政策变化）影响。这反映了大盘股与小盘/成长股在收益驱动因素上的本质差异。</p>
+    </div>
+</div>
+
+<div class="section" id="sec6">
+    <h2>六、结论</h2>
+    <p>本报告对10只A股股票（覆盖银行、汽车、房地产、白酒、能源5个行业）进行了完整的数据获取、清洗、描述统计与CAPM回归分析，主要发现如下：</p>
+    <ol>
+        <li><strong>收益特征</strong>：白酒行业年化收益最高，银行行业最为稳健，新能源行业波动最大但阳光电源表现突出</li>
+        <li><strong>风险特征</strong>：能源和汽车行业波动率最大，银行波动最小；所有股票收益率均呈现尖峰厚尾特征</li>
+        <li><strong>相关性</strong>：同行业股票相关性高，跨行业分散化效果明显，有助于构建多元化投资组合</li>
+        <li><strong>宏观关系</strong>：CPI与股市收益率相关性较弱，无显著线性关系，说明股市受多因素综合影响</li>
+        <li><strong>CAPM结果</strong>：阳光电源存在显著正向Alpha，贵州茅台R²最高，赛力斯R²最低，反映了不同股票的市场敏感度差异</li>
+    </ol>
+    <p>本项目的完整代码、数据和报告可通过GitHub仓库访问，所有Notebook均可从头到尾完整运行。</p>
+</div>
+
+<div class="footer">
+    <p>报告生成时间：2026年5月21日 | 数据来源：baostock, akshare</p>
+    <p>GitHub仓库：https://github.com/ZDC3/dshw-p01</p>
+</div>
+
+</body>
+</html>

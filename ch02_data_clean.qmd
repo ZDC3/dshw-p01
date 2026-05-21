@@ -1,0 +1,35 @@
+# 第二部分：数据清洗
+
+本章节介绍数据清洗流程，包括缺失值处理、异常值检测等。
+
+## Parquet格式存储与性能对比
+
+```{python}
+import pyarrow.parquet as pq
+import time
+
+# 保存为Parquet
+df.to_parquet("data/clean/stock_clean.parquet", index=False)
+
+# 列式读取（只加载需要的列）
+df = pd.read_parquet("data/clean/stock_clean.parquet",
+                     columns=["date", "code", "close"])
+
+# 查看Schema
+schema = pq.read_schema("data/clean/stock_clean.parquet")
+print(schema)
+
+# 与CSV对比：读取速度与文件体积
+t0 = time.time()
+pd.read_csv("data/clean/stock_clean.csv")
+csv_time = time.time() - t0
+csv_size = os.path.getsize("data/clean/stock_clean.csv")
+
+t0 = time.time()
+pd.read_parquet("data/clean/stock_clean.parquet")
+pq_time = time.time() - t0
+pq_size = os.path.getsize("data/clean/stock_clean.parquet")
+
+print(f"CSV  读取耗时: {csv_time:.3f}s  文件大小: {csv_size/1024:.1f} KB")
+print(f"Parquet 读取耗时: {pq_time:.3f}s  文件大小: {pq_size/1024:.1f} KB")
+```

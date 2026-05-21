@@ -1,0 +1,21 @@
+# 原始数据（体积较大，通过运行Notebook重新下载）
+data/stock/
+data/index/
+data/macro/
+data/finance/
+
+# 数据库文件
+*.db
+
+# Notebook缓存
+.ipynb_checkpoints/
+
+# 系统文件
+.DS_Store
+__pycache__/
+*.pyc
+
+# 输出文件保留
+output/
+data/clean/
+data/combined/

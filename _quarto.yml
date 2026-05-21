@@ -1,0 +1,31 @@
+project:
+  type: book
+  output-dir: _book
+
+book:
+  title: "金融数据获取、管理与初步分析"
+  author: "曾垂健"
+  date: "2026-05-21"
+  chapters:
+    - index.qmd
+    - part: "第一部分：数据获取"
+      chapters:
+        - ch01_data_download.qmd
+    - part: "第二部分：数据清洗"
+      chapters:
+        - ch02_data_clean.qmd
+    - part: "第三部分：描述统计与可视化"
+      chapters:
+        - ch03_visualization.qmd
+    - part: "第四部分：回归分析"
+      chapters:
+        - ch04_capm.qmd
+    - conclusion.qmd
+  appendices:
+    - appendix.qmd
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    number-sections: true
