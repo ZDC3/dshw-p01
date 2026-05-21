@@ -47,5 +47,6 @@ dshw-p01/
 └── README.md               # 项目说明
 ```
 
-## GitHub Pages 部署
+## GitHub  部署
 访问: https://github.com/ZDC3/dshw-p01
+Pages：https://zdc3.github.io/dshw-p01/
